@@ -14,8 +14,9 @@
     "applicationId": "xxx"
   },
   "dependencies": {
-    "aws-sdk": "^2.2.26",
-    "alexa-sdk":"^1.0.6",
+    "alexa-sdk": "latest",
+    "aws-sdk": "latest",
+    "dotenv": "latest",
     "moment": "^2.17.1",
     "find-my-iphone": "1.1.1"
   }  

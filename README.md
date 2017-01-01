@@ -1,4 +1,4 @@
-Description
+#Description
 
 This app allows you to ask Alexa to locate devices in your apple iCloud account.
 
@@ -16,7 +16,7 @@ You: Alexa, ask iCloud to alert my phone
 
 Alexa: Your phone will now beep.
 
-Installation
+#Installation
 
  serverless create --template aws-nodejs
 

@@ -7,4 +7,6 @@ node_modules/**
 #ignore env variables
 .env
 
+config.json
+
 tests/main.js
