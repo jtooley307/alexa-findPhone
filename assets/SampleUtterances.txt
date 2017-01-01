@@ -1,0 +1,9 @@
+SearchIntent find {Name} phone
+SearchIntent where is {Name} phone
+SearchIntent {Name}
+SearchIntent find {Name}
+SearchIntent where is {Name}
+
+
+AlertIntent alert {Name} phone
+AlertIntent alert {Name}

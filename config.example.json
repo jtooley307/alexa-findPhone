@@ -1,0 +1,19 @@
+{
+	"app_name": "Find Family",
+	"apple_id": "apple id",
+	"apple_password": "apple password",
+	"latitude": 38.897593,
+	"longitude": -77.036004,
+
+    
+	"deviceMap": {
+		"DONALD": {
+			"name": "Donald",
+			"deviceName": "Donald's iphone'"
+		},
+		"BARAK": {
+			"name": "Barak",
+			"deviceName": "Barak's iphone"
+		}
+	}
+}

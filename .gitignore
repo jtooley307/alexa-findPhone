@@ -1,0 +1,10 @@
+# ignore serverless files
+.serverless/*
+
+#ignore node modules
+node_modules/**
+
+#ignore env variables
+.env
+
+tests/main.js

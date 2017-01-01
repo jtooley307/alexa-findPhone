@@ -1,0 +1,22 @@
+{
+  "name": "FindPhone",
+  "version": "0.9.0",
+  "description": "Finds your family's iDevices using the icloud api",
+  "main": "index.js",
+  "author": "Jim Tooley",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jtooley307"
+  },
+ 
+  "alexa": {
+    "applicationId": "xxx"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.2.26",
+    "alexa-sdk":"^1.0.6",
+    "moment": "^2.17.1",
+    "find-my-iphone": "1.1.1"
+  }  
+}
