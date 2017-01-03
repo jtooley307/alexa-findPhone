@@ -27,23 +27,23 @@ var states = {
 var alexa;
 
 //OPTIONAL: replace with "amzn1.ask.skill.[your-unique-value-here]";
-var APP_ID = "amzn1.ask.skill.dcc36e52-73d1-4872-a2e0-71333c167408";
+var APP_ID = config.app_id;
 
 // Skills name
 var skillName = "FindPhone";
 
 // Message when the skill is first called
-var welcomeMessage = "Welcome to Find Phone.  You ask to find a phone by asking by the name ";
+var welcomeMessage = "Welcome to Find My Friends.  You ask to find a phone by asking by the name ";
 
 // Message for help intent
-var HelpMessage = "Help, You can ask to find a phone by using the person's device name";
+var helpMessage = "Help, You can ask to find a phone by using the person's device name";
 
 // Used to tell user skill is closing
 var shutdownMessage = "Ok see you again soon.";
 var goodbyeMessage = "Happy to help, good bye";
 
 // used for title on companion app
-var cardTitle = "Find Family";
+var cardTitle = "Find My Friends";
 
 // output for Alexa
 var output = "";
@@ -75,14 +75,33 @@ var newSessionHandlers = {
         for (key in config.deviceMap) {
             name += key + ", ";
             listOfNames[i] = key;
-            pr('listOfNames[' + i + "]" + listOfNames[i]);
             i++;
         }
 
-        output = output + " The Choices are " + name + ". You can also say Next to go through the list";
+        output = output + "<break time='1s'/> The Choices are " + name + ". .  You can also say <p> Next</p> to go through the list";
         this.emit(':ask', output, welcomeRepromt);
     },
    
+    'AMAZON.HelpIntent': function () {
+        this.handler.state = states.SEARCHMODE;
+
+        var output = helpMessage;
+        var invocation = config.app_name;
+        var name = "";
+
+        countOfNames = Object.size(config.deviceMap);
+        
+        var key, i = 0;
+        for (key in config.deviceMap) {
+            name += key + ", ";
+            listOfNames[i] = key;
+            i++;
+        }
+
+        output = output + "<break time='1s'/> The Choices are " + name + ". .  You can also say <p>Next</p> to go through the list";
+        this.emit(':ask', output, welcomeRepromt);
+    },
+
     // add search intent here
     'SearchIntent': function(){
         this.handler.state = states.SEARCHMODE;
@@ -96,7 +115,7 @@ var newSessionHandlers = {
     },
 
     'Unhandled': function () {
-        output = HelpMessage;
+        output = helpMessage;
         this.emit(':ask', output, welcomeRepromt);
     },
     'AMAZON.StopIntent': function () {
@@ -112,8 +131,23 @@ var newSessionHandlers = {
 var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 
     'AMAZON.HelpIntent': function () {
-        output = HelpMessage;
-        this.emit(':ask', output, HelpMessage);
+        this.handler.state = states.SEARCHMODE;
+
+        var output = helpMessage;
+        var invocation = config.app_name;
+        var name = "";
+
+        countOfNames = Object.size(config.deviceMap);
+        
+        var key, i = 0;
+        for (key in config.deviceMap) {
+            name += key + ", ";
+            listOfNames[i] = key;
+            i++;
+        }
+
+        output = output + "<break time='1s'/> The Choices are " + name + ". .  You can also say <p>Next</p> to go through the list";
+        this.emit(':ask', output, welcomeRepromt);
     },
 
     'AMAZON.StopIntent': function () {
@@ -121,15 +155,22 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     },
   
     'AMAZON.NextIntent': function () {
-        pr('currentName is ' + currentName);
         this.handler.state = states.DETAILS;
-        this.emit(':ask', "Are you looking for " + listOfNames[currentName] + "?", HelpMessage);
+        this.emit(':ask', "Are you looking for " + listOfNames[currentName] + "?", helpMessage);
     },
 
     'AMAZON.YesIntent': function () {
-        this.handler.state = states.DETAILS;
-        pr('Going to DetailsIntent');
-        this.emitWithState('AMAZON.YesIntent')
+        // if in SEARCHMODE then we know they tried finding someone but failed earlier
+        if (this.handler.state == states.SEARCHMODE) {
+            this.handler.state = states.DETAILS;
+            this.emit(':ask', "Are you looking for " + listOfNames[currentName] + "?", helpMessage);
+
+        } else {
+            // must be coming from Next Intent since we ar ein DETAILS state
+            this.handler.state = states.DETAILS;
+            pr('Going to DetailsIntent');
+            this.emitWithState('AMAZON.YesIntent');
+        }
     },
 
     'AMAZON.NoIntent': function () {
@@ -139,7 +180,7 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 
 
     'AMAZON.RepeatIntent': function () {
-        this.emit(':ask', output, HelpMessage);
+        this.emit(':ask', output, helpMessage);
     },
 
     'SessionEndedRequest': function () {
@@ -152,7 +193,7 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     },
 
     'Unhandled': function () {
-        output = HelpMessage;
+        output = helpMessage;
         this.emit(':ask', output, welcomeRepromt);
     },
 
@@ -160,6 +201,7 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     'SearchIntent': function () {
 
         var intent = this.event.request.intent;
+        
         var name = getDeviceNameFromIntent(intent);
         if (name.indexOf("\'") == -1) {
             var saidDevice = name;
@@ -168,13 +210,18 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
         }
         pr('said device name is '+ saidDevice);
 
+        // check for the case of 'where is my phone...'
+        if (saidDevice === "MY") {
+            this.emitWithState('AMAZON.HelpIntent')
+        }
+
         var possesiveDevice = saidDevice.replace("my", "your");
         var invocation = config.app_name;
 
         var instructions = util.format("You can also say, Alexa, ask %s to alert %s", invocation, saidDevice);
 
         if (!config.deviceMap.hasOwnProperty(saidDevice)) {
-            instructions = util.format("Sorry, I cannot find %s in your device list", possesiveDevice);
+            instructions = util.format("Sorry, I cannot find %s in your devices.  Try again, or just say %s Help", possesiveDevice, invocation);
             alexa.emit(':tell', instructions);
         }
 
@@ -254,9 +301,8 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
                         }
                     });
                 } else {
-                    pr('device =' + device);
-                    errMsg = util.format("The device %s was not found on your iCloud account", deviceName);
-                    alexa.emit(':tell', errMsg);
+                    errMsg = util.format("Sorry, %s was not found.  Would you like to try again?", deviceName);
+                    alexa.emit(':ask', errMsg, errMsg);
                 }
             });
         
@@ -308,8 +354,8 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
                     });
 
                 } else {
-                    errMsg = util.format("The device %s was not found on your iCloud account", deviceName);
-                    alexa.emit(':tell', errMsg);
+                    errMsg = util.format("Sorry, %s was not found.  Would you like to try again?", deviceName);
+                    alexa.emit(':ask', errMsg), errMsg;
                 }
         });
     }
@@ -319,8 +365,8 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 var detailsHandlers = Alexa.CreateStateHandler(states.DETAILS, {
     
     'AMAZON.HelpIntent': function () {
-        output = HelpMessage;
-        this.emit(':ask', output, HelpMessage);
+        output = helpMessage;
+        this.emit(':ask', output, helpMessage);
     },
     
     'AMAZON.CancelIntent': function () {
@@ -418,9 +464,8 @@ var detailsHandlers = Alexa.CreateStateHandler(states.DETAILS, {
                         }
                     });
                 } else {
-                    pr('device =' + device);
-                    errMsg = util.format("The device %s was not found on your iCloud account", deviceName);
-                    alexa.emit(':tell', errMsg);
+                    errMsg = util.format("Sorry, %s was not found.  Would you like to try again?", deviceName);
+                    alexa.emit(':ask', errMsg), errMsg;
                 }
             });
     },
@@ -432,14 +477,18 @@ var detailsHandlers = Alexa.CreateStateHandler(states.DETAILS, {
         }
         this.emitWithState('AMAZON.NextIntent')
     },
-
+  
+    'AMAZON.StopIntent': function () {
+        this.emit(':tell', goodbyeMessage);
+    },
+  
     'SessionEndedRequest': function () {
         // Use this function to clear up and save any data needed between sessions
         this.emit('AMAZON.StopIntent');
     },
 
     'Unhandled': function () {
-        output = HelpMessage;
+        output = helpMessage;
         alexa.emit(':ask', output, welcomeRepromt);
     },
 

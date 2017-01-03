@@ -4,6 +4,5 @@ SearchIntent {Name}
 SearchIntent find {Name}
 SearchIntent where is {Name}
 
-
 AlertIntent alert {Name} phone
 AlertIntent alert {Name}
